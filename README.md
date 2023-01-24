@@ -91,14 +91,23 @@ The V25 and Avg_Slope can be found in the datasheet, and in our case is:
 
 ![image](https://user-images.githubusercontent.com/58916022/214292370-1261b265-484e-4c46-80c9-08bfc87830ed.png)
 
-By doing the math (for the first reading) we have: 
+By doing the math (for the first reading) we have:
+NOTE THAT THE DATA IS ALREADY ALLOCATED IN temp_data BY 12 BITS IN EACH [x] uint16_t. NOT A SINGLE VALUE WILL PASS 0x3FF OR 1023.
 
-* 0xB103 = 0b1011 0001 0000 0011 -> taking the 12 bits to the right 0x0103 = 0b0001 0000 0011.
-* Decimal value of reading = 259.
-* VSENSE = 259 * 3.3/4095 = 0,20871794871794871794871794871795.
+* 0xB10 = 0b1011 0001 0000 -> 945.
+* VSENSE = 945 * 3.3/4095 = 0,76153846153846153846153846153846.
 * Temperature (in °C) = {(VSENSE – V25) / Avg_Slope} + 25.
-* Temperature (in °C) = {(0,208717.. - 0.76) / 2.5} + 25 = 24,779487179487179487179487179487 °C.
+* Temperature (in °C) = {(0,7615384.. - 0.76) / 0.0025} + 25 = 25,615384615384615384615384615385 °C.
 
+I could code a function like that:
 
+```c
+#define VSENSE 		(3.3/(4096-1))
+#define V25		0.76
+#define Avg_Slope	0.0025
+float get_temp (uint16_t read){
+	return ((((VSENSE*read) - V25) / Avg_Slope) + 25);
+}
+```
 
 
