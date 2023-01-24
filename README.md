@@ -63,4 +63,42 @@ void EXTI15_10_IRQHandler(void)
 }
 ```
 
-In 'USER CODE BEGIN 4' we call the Convertion Complete Callback for the ADC.
+In 'USER CODE BEGIN 4' we call the Convertion Complete Callback for the ADC. Just copy and removed the __weak at the begin of the function.
+
+# Debug 1
+
+We add a breakpoing at the end of the callback function (and end bracket '}'). Then we added the 'temp_data' variable to the the 'Expressions' window and we also were able to see its address.
+
+![image](https://user-images.githubusercontent.com/58916022/214288940-7d030427-4a0c-4155-b691-21acd1f47b0d.png)
+
+We also added this address to the Memory Monitor:
+
+![image](https://user-images.githubusercontent.com/58916022/214289123-224b9918-b045-4d26-beff-1f68d89d51e8.png)
+
+Then we also added the 'temp_data' to the 'Live Expressions' windows, we started to run the application and pressed B1 on the board. The code run up to the breakpoint and we were able to see the data of the ADC reading going to the 'temp_data' address.
+
+![image](https://user-images.githubusercontent.com/58916022/214290469-caaa9071-01e4-4d3f-a46e-4e4a610c7333.png)
+
+# Reading the values in °C
+
+In the reference manual we have the formula for the temperature reading. The values inside the temp_data are 16 bits and correspond to the VSENSE.
+
+![image](https://user-images.githubusercontent.com/58916022/214291335-9ff1a5cb-80e8-4ac6-a00c-ebdaa89b3fa6.png)
+
+Our ADC resolution is = 'Vref' / (2^bits_resolution -1) = 3.3V / (2^12 -1) = 3.3/4095 [V]
+
+The V25 and Avg_Slope can be found in the datasheet, and in our case is: 
+
+![image](https://user-images.githubusercontent.com/58916022/214292370-1261b265-484e-4c46-80c9-08bfc87830ed.png)
+
+By doing the math (for the first reading) we have: 
+
+* 0xB103 = 0b1011 0001 0000 0011 -> taking the 12 bits to the right 0x0103 = 0b0001 0000 0011.
+* Decimal value of reading = 259.
+* VSENSE = 259 * 3.3/4095 = 0,20871794871794871794871794871795.
+* Temperature (in °C) = {(VSENSE – V25) / Avg_Slope} + 25.
+* Temperature (in °C) = {(0,208717.. - 0.76) / 2.5} + 25 = 24,779487179487179487179487179487 °C.
+
+
+
+
