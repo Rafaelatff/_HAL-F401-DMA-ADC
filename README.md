@@ -35,3 +35,32 @@ And before we generate the code, we configure the 'Code generation' to generate 
 ![image](https://user-images.githubusercontent.com/58916022/214277536-60123e44-7bc4-4ac5-b472-7dfff7a497d4.png)
 
 # STM32CubeIDE
+
+All initializations are made according to our configuration on MX software. Lesson 51 shows and explain the generataded codes. It is importante to hightlit that the LINK between ADC and DMA is made on source file 'stm32f4xx_hal_msp.c' by passing both handle types (hadc and hdma_adc1) to the API __HAL_LINKDMA.
+
+```c
+  __HAL_LINKDMA(hadc,DMA_Handle,hdma_adc1);
+```
+
+Inside the *EXTI15_10_IRQHandler* the interrupt is already configurated to be generated onde 'B1' buttom is pressed. Then we just need to add to start the reading of the ADC1 by using the API *HAL_ADC_Start_DMA*. When we add the address for the adc1 handle, a syntax erros is generated. We need to call inside the 'USER CODE BEGIN EV' the *extern ADC_HandleTypeDef hadc1;*.
+
+![image](https://user-images.githubusercontent.com/58916022/214282128-ba657f43-54e0-4e1a-8182-ac2017f04726.png)
+
+Then we need, inside the 'USER CODE BEGIN PV' to add the array for the 16 readings of temperature data *uint16_t temp_data[16];*. We use type uint16_t since ADC is only 12 bits. We pass this address to the API *HAL_ADC_Start_DMA*, but typecasted to uint32_t type. Then, as a last parameter, we send the 'Length' parameter, that is the length of data to be transferred from ADC peripheral to memory.
+
+```c
+/**
+  * @brief This function handles EXTI line[15:10] interrupts.
+  */
+void EXTI15_10_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI15_10_IRQn 0 */
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) temp_data, 16);
+  /* USER CODE END EXTI15_10_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(B1_Pin);
+  /* USER CODE BEGIN EXTI15_10_IRQn 1 */
+  /* USER CODE END EXTI15_10_IRQn 1 */
+}
+```
+
+In 'USER CODE BEGIN 4' we call the Convertion Complete Callback for the ADC.
